@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, Radar, TriangleAlert, Route, Satellite, Cpu } from "lucide-react";
+import { Shield, Radar, Route, Satellite, Cpu } from "lucide-react";
 
 const quickStats = [
   { label: "Feeds Online", value: "03/03", status: "status-active" },
