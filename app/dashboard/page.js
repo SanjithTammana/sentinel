@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { Shield, Activity, LocateFixed } from 'lucide-react';
 import AlertCard from '@/components/AlertCard';
 import MapView from '@/components/MapView';
+import ChatPanel from '@/components/ChatPanel';
+
+const MOCK_USER_ID = '8732a39a-7622-4a0b-932b-3443a29777f9';
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
@@ -13,22 +16,19 @@ export default function Dashboard() {
   const [scanMessage, setScanMessage] = useState('');
   const [userLocation] = useState({ lat: 30.2672, lng: -97.7431, name: 'Austin, TX' });
 
-  // TODO: replace with authenticated user id when auth flow is enabled.
-  const mockUserId = '8732a39a-7622-4a0b-932b-3443a29777f9';
-
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/alerts?userId=${mockUserId}`);
+      const res = await fetch(`/api/alerts?userId=${MOCK_USER_ID}`);
       const data = await res.json();
       setAlerts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch alerts:', err);
-      setScanMessage('Could not load alerts. Check API and Supabase connection.');
+      setScanMessage('Could not load alerts. Check API and Firebase connection.');
     } finally {
       setLoading(false);
     }
-  }, [mockUserId]);
+  }, []);
 
   useEffect(() => {
     fetchAlerts();
@@ -64,6 +64,7 @@ export default function Dashboard() {
           <Link href="/setup" className="portal-link">Location Setup</Link>
           <a href="#alerts" className="portal-link">Alert Feed</a>
           <a href="#map" className="portal-link">Live Map</a>
+          <a href="#chat" className="portal-link">AI Chat</a>
         </div>
       </nav>
 
@@ -72,7 +73,7 @@ export default function Dashboard() {
           <span className="portal-chip"><Activity size={14} /> Operations Console</span>
           <h1 className="portal-title">Live Response Dashboard</h1>
           <p className="portal-subtitle">
-            View active risks, run manual sweeps, and monitor mapped hazard proximity in real time.
+            View active risks, run manual sweeps, monitor mapped hazard proximity, and chat with Sentinel AI.
           </p>
           <div className="portal-actions">
             <button className="portal-btn" onClick={runHazardScan} disabled={scanRunning}>
@@ -95,8 +96,8 @@ export default function Dashboard() {
               <p className="metric-value"><LocateFixed size={16} style={{ verticalAlign: 'text-bottom' }} /> {userLocation.name}</p>
             </article>
             <article className="metric-card">
-              <p className="metric-label">Mode</p>
-              <p className="metric-value status-active">Monitoring</p>
+              <p className="metric-label">Data Backend</p>
+              <p className="metric-value status-active">Firebase</p>
             </article>
           </div>
         </section>
@@ -115,11 +116,14 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="portal-panel" id="map">
-            <h2 style={{ marginBottom: '0.7rem' }}>Hazard Map</h2>
-            <div className="map-shell">
-              <MapView userLocation={userLocation} alerts={alerts} />
+          <div className="dashboard-side">
+            <div className="portal-panel" id="map">
+              <h2 style={{ marginBottom: '0.7rem' }}>Hazard Map</h2>
+              <div className="map-shell">
+                <MapView userLocation={userLocation} alerts={alerts} />
+              </div>
             </div>
+            <ChatPanel userId={MOCK_USER_ID} location={userLocation} alerts={alerts} />
           </div>
         </section>
       </main>

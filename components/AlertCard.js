@@ -10,7 +10,12 @@ function severityClass(severity) {
 }
 
 export default function AlertCard({ alert }) {
-  const { title, severity, created_at, ai_advice, description, type } = alert;
+  const title = alert.title;
+  const severity = alert.severity;
+  const createdAt = alert.createdAt || alert.created_at;
+  const aiAdvice = alert.aiAdvice || alert.ai_advice;
+  const description = alert.description;
+  const type = alert.type;
   const headClass = severityClass(severity);
 
   return (
@@ -21,7 +26,7 @@ export default function AlertCard({ alert }) {
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
           <Clock3 size={13} />
-          {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true }) : 'new'}
+          {createdAt ? formatDistanceToNow(new Date(createdAt), { addSuffix: true }) : 'new'}
         </span>
       </header>
 
@@ -31,15 +36,15 @@ export default function AlertCard({ alert }) {
 
         {description ? <p className="alert-text">{description}</p> : null}
 
-        {ai_advice ? (
+        {aiAdvice ? (
           <div className="alert-actions">
             <p className="small-muted">AI guidance:</p>
-            {ai_advice.advice ? <p className="alert-text">{ai_advice.advice}</p> : null}
-            {ai_advice.actions?.map((action, idx) => (
+            {aiAdvice.advice ? <p className="alert-text">{aiAdvice.advice}</p> : null}
+            {aiAdvice.actions?.map((action, idx) => (
               <p className="alert-step" key={`${action}-${idx}`}>{idx + 1}. {action}</p>
             ))}
-            {ai_advice.safeRoute ? (
-              <p className="alert-step"><MapPin size={13} style={{ marginRight: '0.35rem' }} />Safe route: {ai_advice.safeRoute}</p>
+            {aiAdvice.safeRoute ? (
+              <p className="alert-step"><MapPin size={13} style={{ marginRight: '0.35rem' }} />Safe route: {aiAdvice.safeRoute}</p>
             ) : null}
           </div>
         ) : null}

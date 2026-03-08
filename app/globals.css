@@ -378,3 +378,73 @@ a {
     height: min(68vh, 700px);
   }
 }
+
+.dashboard-side {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.chat-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chat-thread {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: rgba(7, 14, 32, 0.65);
+  display: grid;
+  gap: 0.55rem;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.chat-bubble {
+  border-radius: 10px;
+  padding: 0.6rem;
+  border: 1px solid transparent;
+}
+
+.chat-bubble.assistant {
+  background: rgba(83, 200, 255, 0.1);
+  border-color: rgba(83, 200, 255, 0.25);
+}
+
+.chat-bubble.user {
+  background: rgba(64, 255, 207, 0.08);
+  border-color: rgba(64, 255, 207, 0.25);
+}
+
+.chat-role {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chat-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.chat-form .portal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+@media (min-width: 920px) {
+  .chat-thread {
+    max-height: 320px;
+  }
+}

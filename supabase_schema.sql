@@ -1,3 +1,6 @@
+-- Legacy file retained for reference.
+-- The active runtime datastore has migrated to Firebase Firestore.
+
 -- SQL for Supabase Editor
 
 -- 1. Profiles Table (User Locations)
@@ -32,11 +35,11 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 
 -- Allow users to read/write their own profiles
-CREATE POLICY "Users can manage their own profiles" 
-ON profiles FOR ALL 
+CREATE POLICY "Users can manage their own profiles"
+ON profiles FOR ALL
 USING (auth.uid() = id);
 
 -- Allow users to read their own alerts
-CREATE POLICY "Users can read their own alerts" 
-ON alerts FOR SELECT 
+CREATE POLICY "Users can read their own alerts"
+ON alerts FOR SELECT
 USING (auth.uid() = user_id);
