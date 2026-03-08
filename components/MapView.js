@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -10,22 +11,21 @@ export default function MapView({ userLocation, alerts }) {
   const map = useRef(null);
 
   useEffect(() => {
-    if (map.current) return; // initialize map only once
-    
+    if (map.current) return;
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [userLocation?.lng || -97.7431, userLocation?.lat || 30.2672], // Default Austin
-      zoom: 9
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [userLocation?.lng || -97.7431, userLocation?.lat || 30.2672],
+      zoom: 8.5,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    // Add user marker
+
     if (userLocation) {
-      new mapboxgl.Marker({ color: '#4f46e5' })
+      new mapboxgl.Marker({ color: '#40ffcf' })
         .setLngLat([userLocation.lng, userLocation.lat])
-        .setPopup(new mapboxgl.Popup().setHTML('<h4>Your Location</h4>'))
+        .setPopup(new mapboxgl.Popup().setHTML('<h4>Monitoring Center</h4>'))
         .addTo(map.current);
     }
   }, [userLocation]);
@@ -33,20 +33,15 @@ export default function MapView({ userLocation, alerts }) {
   useEffect(() => {
     if (!map.current || !alerts) return;
 
-    // Add markers for hazards
-    alerts.forEach(alert => {
-      if (alert.location) {
-        new mapboxgl.Marker({ color: alert.severity === 'High' || alert.severity === 'Critical' ? '#ef4444' : '#f59e0b' })
-          .setLngLat([alert.location.lng, alert.location.lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`<b>${alert.type} Alert:</b> ${alert.title}`))
-          .addTo(map.current);
-      }
+    alerts.forEach((alert) => {
+      if (!alert.location) return;
+      const severe = alert.severity === 'High' || alert.severity === 'Critical';
+      new mapboxgl.Marker({ color: severe ? '#ff6072' : '#ffc857' })
+        .setLngLat([alert.location.lng, alert.location.lat])
+        .setPopup(new mapboxgl.Popup().setHTML(`<strong>${alert.type || 'Hazard'}:</strong> ${alert.title || 'Alert'}`))
+        .addTo(map.current);
     });
   }, [alerts]);
 
-  return (
-    <div className="w-full h-full relative rounded-xl overflow-hidden border border-slate-200">
-      <div ref={mapContainer} className="absolute inset-0" />
-    </div>
-  );
+  return <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />;
 }

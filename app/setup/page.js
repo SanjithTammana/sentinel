@@ -1,6 +1,10 @@
 'use client';
+
 import { useState } from 'react';
-import { MapPin, CheckCircle, Navigation } from 'lucide-react';
+import Link from 'next/link';
+import { Shield, Crosshair, CircleCheck } from 'lucide-react';
+
+const presets = ['Austin, TX', 'Seattle, WA', 'Miami, FL'];
 
 export default function Setup() {
   const [city, setCity] = useState('');
@@ -10,64 +14,72 @@ export default function Setup() {
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate API call to save location
+
+    // Placeholder flow until profile persistence + geocoding is wired.
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
-      setTimeout(() => window.location.href = '/dashboard', 1500);
-    }, 1500);
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 900);
+    }, 900);
   };
 
   return (
-    <div className="min-h-screen bg-indigo-600 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-indigo-50 text-indigo-600 mb-6">
-            <Navigation size={40} fill="currentColor" />
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Configure Sentinel</h1>
-          <p className="text-slate-500 font-medium">Where should we monitor for hazards?</p>
+    <div className="portal-shell">
+      <nav className="portal-nav">
+        <Link href="/" className="portal-brand"><Shield size={18} /> SENTINEL OPS</Link>
+        <div className="portal-links">
+          <Link href="/" className="portal-link">Home</Link>
+          <Link href="/dashboard" className="portal-link">Dashboard</Link>
         </div>
+      </nav>
 
-        <form onSubmit={handleSave} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Your City / Region</label>
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input 
-                type="text"
-                placeholder="e.g. Austin, TX"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-indigo-500 focus:outline-none transition-all font-medium"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
+      <main className="portal-grid setup-grid">
+        <section className="portal-panel">
+          <span className="portal-chip"><Crosshair size={14} /> Area Configuration</span>
+          <h1 className="portal-title">Set Monitoring Coordinates</h1>
+          <p className="portal-subtitle">Choose the location Sentinel should prioritize for hazard scans and alerts.</p>
+
+          <form onSubmit={handleSave} style={{ marginTop: '1rem' }}>
+            <label className="input-label">City / Region</label>
+            <input
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="portal-input"
+              placeholder="Example: Austin, TX"
+            />
+            <div className="portal-actions">
+              <button type="submit" className="portal-btn" disabled={loading || success}>
+                {loading ? 'Syncing...' : success ? 'Location Synced' : 'Save and Continue'}
+              </button>
+              <Link href="/dashboard" className="portal-btn secondary">Skip to Dashboard</Link>
             </div>
+          </form>
+        </section>
+
+        <aside className="portal-panel">
+          <h2 style={{ marginBottom: '0.8rem' }}>Quick Presets</h2>
+          <div className="card-grid">
+            {presets.map((preset) => (
+              <button
+                key={preset}
+                className="setup-option"
+                onClick={() => setCity(preset)}
+                type="button"
+              >
+                <span>{preset}</span>
+                <CircleCheck size={16} className="status-active" />
+              </button>
+            ))}
           </div>
-
-          <button 
-            type="submit"
-            disabled={loading || success}
-            className={`w-full py-4 rounded-xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
-              success 
-              ? 'bg-green-500 text-white' 
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-200'
-            }`}
-          >
-            {loading ? 'Verifying Location...' : success ? (
-              <>
-                <CheckCircle size={24} />
-                Location Saved
-              </>
-            ) : 'Start Monitoring'}
-          </button>
-        </form>
-
-        <p className="mt-8 text-center text-slate-400 text-sm font-medium">
-          We'll use your location to poll official disaster APIs within a 50km-200km radius.
-        </p>
-      </div>
+          <p className="small-muted" style={{ marginTop: '0.9rem' }}>
+            Current setup page stores location locally in this demo flow and forwards you to the live dashboard.
+          </p>
+        </aside>
+      </main>
     </div>
   );
 }

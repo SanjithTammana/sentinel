@@ -1,112 +1,127 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { Shield, Activity, LocateFixed } from 'lucide-react';
 import AlertCard from '@/components/AlertCard';
 import MapView from '@/components/MapView';
-import { Shield, AlertCircle, LayoutDashboard, Settings } from 'lucide-react';
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState({ lat: 30.2672, lng: -97.7431, name: 'Austin, TX' });
+  const [scanRunning, setScanRunning] = useState(false);
+  const [scanMessage, setScanMessage] = useState('');
+  const [userLocation] = useState({ lat: 30.2672, lng: -97.7431, name: 'Austin, TX' });
 
-  // In a real app, we'd get the current user from Supabase Auth
+  // TODO: replace with authenticated user id when auth flow is enabled.
   const mockUserId = '8732a39a-7622-4a0b-932b-3443a29777f9';
 
-  useEffect(() => {
-    async function fetchAlerts() {
-      try {
-        const res = await fetch(`/api/alerts?userId=${mockUserId}`);
-        const data = await res.json();
-        setAlerts(data);
-      } catch (err) {
-        console.error('Failed to fetch alerts:', err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchAlerts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/alerts?userId=${mockUserId}`);
+      const data = await res.json();
+      setAlerts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch alerts:', err);
+      setScanMessage('Could not load alerts. Check API and Supabase connection.');
+    } finally {
+      setLoading(false);
     }
+  }, [mockUserId]);
+
+  useEffect(() => {
     fetchAlerts();
-  }, []);
+  }, [fetchAlerts]);
+
+  async function runHazardScan() {
+    setScanRunning(true);
+    setScanMessage('Running hazard sweep...');
+
+    try {
+      const res = await fetch('/api/check-hazards');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Scan failed.');
+      }
+
+      setScanMessage(`Sweep complete: ${data.hazardsProcessed || 0} new hazards processed.`);
+      await fetchAlerts();
+    } catch (err) {
+      console.error('Hazard scan failed:', err);
+      setScanMessage(err.message || 'Hazard scan failed.');
+    } finally {
+      setScanRunning(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col gap-8">
-        <div className="flex items-center gap-2 text-indigo-600 font-black text-2xl tracking-tighter">
-          <Shield fill="currentColor" size={32} />
-          SENTINEL
+    <div className="portal-shell">
+      <nav className="portal-nav">
+        <Link href="/" className="portal-brand"><Shield size={18} /> SENTINEL OPS</Link>
+        <div className="portal-links">
+          <Link href="/" className="portal-link">Home</Link>
+          <Link href="/setup" className="portal-link">Location Setup</Link>
+          <a href="#alerts" className="portal-link">Alert Feed</a>
+          <a href="#map" className="portal-link">Live Map</a>
         </div>
-        
-        <nav className="flex flex-col gap-1">
-          <a href="#" className="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-bold">
-            <LayoutDashboard size={20} />
-            Dashboard
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium">
-            <AlertCircle size={20} />
-            Active Alerts
-          </a>
-          <a href="/setup" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium">
-            <Settings size={20} />
-            Settings
-          </a>
-        </nav>
+      </nav>
 
-        <div className="mt-auto p-4 bg-slate-900 rounded-xl text-white">
-          <p className="text-xs text-slate-400 mb-1 uppercase tracking-widest font-bold">Location Monitoring</p>
-          <p className="font-bold">{userLocation.name}</p>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto p-8">
-        <header className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900">Safety Dashboard</h1>
-            <p className="text-slate-500 font-medium">Monitoring hazards in your immediate vicinity.</p>
+      <main className="portal-grid">
+        <section className="portal-panel">
+          <span className="portal-chip"><Activity size={14} /> Operations Console</span>
+          <h1 className="portal-title">Live Response Dashboard</h1>
+          <p className="portal-subtitle">
+            View active risks, run manual sweeps, and monitor mapped hazard proximity in real time.
+          </p>
+          <div className="portal-actions">
+            <button className="portal-btn" onClick={runHazardScan} disabled={scanRunning}>
+              {scanRunning ? 'Scanning...' : 'Run Hazard Sweep'}
+            </button>
+            <button className="portal-btn secondary" onClick={fetchAlerts}>Refresh Feed</button>
+            <Link href="/setup" className="portal-btn warning">Change Location</Link>
           </div>
-          
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all flex items-center gap-2"
-          >
-            Check for Hazards
-          </button>
-        </header>
+          <p className="small-muted" style={{ marginTop: '0.7rem' }}>{scanMessage || 'System idle. Awaiting command.'}</p>
+        </section>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-          {/* Feed */}
-          <div className="xl:col-span-5 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-slate-800">Alert Feed</h2>
-              <span className="text-sm font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
-                {alerts.length} Active
-              </span>
-            </div>
-            
-            <div className="flex-1 overflow-auto pr-2 custom-scrollbar">
+        <section className="portal-panel">
+          <div className="metric-grid">
+            <article className="metric-card">
+              <p className="metric-label">Active Alerts</p>
+              <p className="metric-value">{alerts.length}</p>
+            </article>
+            <article className="metric-card">
+              <p className="metric-label">Tracked Location</p>
+              <p className="metric-value"><LocateFixed size={16} style={{ verticalAlign: 'text-bottom' }} /> {userLocation.name}</p>
+            </article>
+            <article className="metric-card">
+              <p className="metric-label">Mode</p>
+              <p className="metric-value status-active">Monitoring</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="dashboard-grid">
+          <div className="portal-panel" id="alerts">
+            <h2 style={{ marginBottom: '0.7rem' }}>Alert Feed</h2>
+            <div className="alert-list">
               {loading ? (
-                <div className="flex flex-col gap-4 animate-pulse">
-                  {[1, 2, 3].map(i => <div key={i} className="h-64 bg-white rounded-xl border border-slate-200" />)}
-                </div>
+                <p className="small-muted">Loading alerts...</p>
               ) : alerts.length > 0 ? (
-                alerts.map(alert => <AlertCard key={alert.id} alert={alert} />)
+                alerts.map((alert) => <AlertCard key={alert.id} alert={alert} />)
               ) : (
-                <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 text-slate-300 mb-4">
-                    <Shield size={32} />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-700 mb-1">No hazards detected</h3>
-                  <p className="text-slate-500">You're currently in a safe zone. We'll alert you if anything changes.</p>
-                </div>
+                <p className="small-muted">No active alerts in this feed yet.</p>
               )}
             </div>
           </div>
 
-          {/* Map */}
-          <div className="xl:col-span-7 h-[calc(100vh-200px)] min-h-[500px]">
-            <MapView userLocation={userLocation} alerts={alerts} />
+          <div className="portal-panel" id="map">
+            <h2 style={{ marginBottom: '0.7rem' }}>Hazard Map</h2>
+            <div className="map-shell">
+              <MapView userLocation={userLocation} alerts={alerts} />
+            </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );
